@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Simulador de Dinero e Inversión</title>
+<meta name="description" content="Calcula tu ISR en México 2026, registra tus ingresos y gastos mes a mes y recibe ideas de inversión según tu perfil. Funciona en un solo archivo, sin instalar nada.">
+<meta name="theme-color" content="#1a1430">
+<meta property="og:title" content="Mi Dinero Inteligente — Simulador de ISR e Inversión">
+<meta property="og:description" content="Calcula tu ISR, controla tus gastos y descubre cómo invertir según tu edad y experiencia.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23b46ef0'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3E$%3C/text%3E%3C/svg%3E">
 <style>
 :root{
   --bg1:#120e1a; --bg2:#1a1430; --card:#1d1830; --card2:#241d3d;
@@ -152,9 +158,46 @@ input[type=range]::-moz-range-thumb{width:24px; height:24px; border-radius:50%; 
   font-weight:700;
 }
 .field input[type=text]::placeholder{ color:#8a80a0; }
+
+/* Registro mensual */
+.field input[type=month]{width:100%; padding:12px 13px; border-radius:12px; border:1px solid var(--line); background:#ffffff !important; color:#1c1230 !important; font-size:.92rem; font-weight:700; font-family:inherit;}
+.save-btn{width:100%; padding:14px; border:none; border-radius:14px; background:linear-gradient(135deg,var(--p1),var(--p2)); color:#fff; font-size:.9rem; font-weight:800; cursor:pointer; box-shadow:0 8px 20px rgba(180,110,240,.35);}
+.save-btn:active{transform:scale(.98);}
+.toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px); background:var(--good); color:#08281d; padding:11px 18px; border-radius:99px; font-size:.8rem; font-weight:800; opacity:0; pointer-events:none; transition:all .25s; z-index:50; max-width:90%; text-align:center;}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+.chart{display:flex; gap:10px; align-items:flex-end; justify-content:center; margin:8px 0 6px;}
+.bcol{flex:1; max-width:62px; text-align:center;}
+.bars{height:120px; display:flex; align-items:flex-end; justify-content:center; gap:4px;}
+.b{width:42%; border-radius:6px 6px 2px 2px; min-height:3px;}
+.b.inc{background:linear-gradient(180deg,var(--gold2),var(--gold));}
+.b.exp{background:linear-gradient(180deg,var(--warn),#d9742f);}
+.blbl{font-size:.6rem; color:var(--muted); margin-top:6px; font-weight:700; text-transform:capitalize;}
+.reg-item{border:1px solid var(--line); border-radius:16px; padding:13px 14px; background:rgba(0,0,0,.12); margin-bottom:10px;}
+:root:not([data-theme="dark"]) .reg-item{background:rgba(0,0,0,.02);}
+.reg-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:9px;}
+.reg-mes{font-size:.86rem; font-weight:800; text-transform:capitalize;}
+.reg-del{border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:10px; padding:5px 10px; font-size:.68rem; font-weight:700; cursor:pointer;}
+.reg-nums{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; text-align:left;}
+.reg-nums .k{font-size:.58rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; font-weight:700;}
+.reg-nums .v{font-size:.8rem; font-weight:800;}
+.empty{text-align:center; color:var(--muted); font-size:.8rem; line-height:1.6; padding:18px 6px;}
+.reg-sum{margin-bottom:18px;}
+
+/* Página completa: más ancha en computadora, pie de página y aviso sin JS */
+@media (min-width:768px){
+  .wrap{max-width:680px; padding-top:44px;}
+  .hero h1{font-size:2rem;}
+  .hero p{font-size:.92rem;}
+  .tabs{top:14px;}
+  .tabs button{font-size:.9rem; padding:14px 8px;}
+}
+.site-footer{margin-top:22px; padding:20px 8px 6px; text-align:center; border-top:1px solid var(--line); color:var(--muted); font-size:.72rem; line-height:1.7;}
+.site-footer b{color:var(--gold2);}
+.noscript-msg{margin:16px; padding:14px; border:1px solid var(--warn); border-radius:14px; color:var(--warn); background:rgba(255,159,107,.12); text-align:center; font-size:.85rem; font-weight:700;}
 </style>
 </head>
 <body>
+<noscript><div class="noscript-msg">Este simulador necesita JavaScript activado en tu navegador para funcionar.</div></noscript>
 <div class="wrap">
 
   <div class="hero">
@@ -166,6 +209,7 @@ input[type=range]::-moz-range-thumb{width:24px; height:24px; border-radius:50%; 
   <div class="tabs">
     <button class="active" id="tabBtn1" onclick="showTab(1)">📝 Mis datos</button>
     <button id="tabBtn2" onclick="showTab(2)">💡 Inversión</button>
+    <button id="tabBtn3" onclick="showTab(3)">📒 Registro</button>
   </div>
 
   <div class="tabview active" id="tabview1">
@@ -205,13 +249,13 @@ input[type=range]::-moz-range-thumb{width:24px; height:24px; border-radius:50%; 
 
     <div class="card">
       <h2>💵 Tu ingreso o mesada mensual</h2>
-      <p class="cap">Desliza entre $1,500 y $50,000 — sueldo, medio tiempo o mesada</p>
+      <p class="cap">Desliza entre $1,500 y $300,000 — sueldo, medio tiempo o mesada</p>
       <div class="income-display">
         <div class="amt" id="salarioVal">$1,500</div>
         <div class="lbl">al mes</div>
       </div>
-      <input type="range" id="salarioSlider" min="1500" max="50000" step="100" value="1500" oninput="calcular()">
-      <div class="range-labels"><span>$1,500</span><span>$50,000</span></div>
+      <input type="range" id="salarioSlider" min="1500" max="300000" step="500" value="1500" oninput="calcular()">
+      <div class="range-labels"><span>$1,500</span><span>$300,000</span></div>
     </div>
 
     <div class="card">
@@ -283,7 +327,37 @@ input[type=range]::-moz-range-thumb{width:24px; height:24px; border-radius:50%; 
       </div>
     </div>
 
+    <div class="card">
+      <h2>📒 Guardar en mi registro</h2>
+      <p class="cap">Elige el mes y guarda tu ingreso y tus gastos para llevar tu historial</p>
+      <div class="field">
+        <label>Mes a registrar</label>
+        <input type="month" id="mesReg">
+      </div>
+      <button class="save-btn" onclick="guardarMes()">💾 Guardar este mes</button>
+    </div>
+
   </div>
+
+  <div class="tabview" id="tabview3">
+    <div class="card reg-sum">
+      <h2>📊 Resumen de tu registro</h2>
+      <p class="cap" id="regCap">Aún no has guardado ningún mes</p>
+      <div class="stats" id="regStats"></div>
+    </div>
+    <div class="card">
+      <h2>📈 Ingresos vs. gastos por mes</h2>
+      <p class="cap">Últimos meses guardados (dorado = ingreso, naranja = gasto)</p>
+      <div class="chart" id="regChart"></div>
+    </div>
+    <div class="card">
+      <h2>🗓️ Historial mes por mes</h2>
+      <p class="cap">Cada mes que guardes aparece aquí, del más reciente al más antiguo</p>
+      <div id="regList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
 
   <div class="tabview" id="tabview2">
     <div class="card">
@@ -298,6 +372,11 @@ input[type=range]::-moz-range-thumb{width:24px; height:24px; border-radius:50%; 
   <div class="note">
     Basado en la tarifa oficial ISR 2026 (Anexo 8 RMF, Art. 152 LISR). La deducción fiscal se limita al menor entre tus gastos deducibles, el <strong>15%</strong> de tu ingreso anual y <strong>5 UMAs</strong> (≈ $206,480/año). Este simulador y sus ideas de inversión tienen fines educativos y generales — no constituyen asesoría financiera personalizada. Si eres menor de edad, platica estas ideas con un adulto de confianza antes de tomar decisiones de dinero.
   </div>
+
+  <footer class="site-footer">
+    <b>Mi Dinero Inteligente</b> · Simulador de ISR, registro mensual e ideas de inversión<br>
+    Hecho con HTML, CSS y JavaScript en un solo archivo · Tus datos se quedan en tu propio navegador
+  </footer>
 </div>
 
 <script>
@@ -319,10 +398,112 @@ const CIRC = 2*Math.PI*80;
 let experiencia = 'Principiante';
 
 function showTab(n){
-  document.getElementById('tabview1').classList.toggle('active', n===1);
-  document.getElementById('tabview2').classList.toggle('active', n===2);
-  document.getElementById('tabBtn1').classList.toggle('active', n===1);
-  document.getElementById('tabBtn2').classList.toggle('active', n===2);
+  [1,2,3].forEach(i => {
+    document.getElementById('tabview'+i).classList.toggle('active', n===i);
+    document.getElementById('tabBtn'+i).classList.toggle('active', n===i);
+  });
+  if(n===3) renderRegistro();
+}
+
+// ---------- Registro mensual ----------
+const STORE_KEY = 'miDineroInteligente_registro_v1';
+let registro = [];
+let ultimo = {ingreso:0, gastos:0, isr:0, queda:0};
+
+function cargarRegistro(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){ const arr = JSON.parse(raw); if(Array.isArray(arr)) registro = arr; }
+  }catch(e){ /* sin almacenamiento: el registro vive solo mientras la página esté abierta */ }
+}
+function persistirRegistro(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(registro)); return true; }
+  catch(e){ return false; }
+}
+function mesTexto(ym){
+  const [y,m] = ym.split('-').map(Number);
+  return new Date(y, m-1, 1).toLocaleDateString('es-MX', {month:'long', year:'numeric'});
+}
+function mesCorto(ym){
+  const [y,m] = ym.split('-').map(Number);
+  return new Date(y, m-1, 1).toLocaleDateString('es-MX', {month:'short'}).replace('.','');
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function guardarMes(){
+  const mes = document.getElementById('mesReg').value;
+  if(!mes){ toast('Elige primero el mes a registrar'); return; }
+  const entrada = {
+    mes: mes,
+    ingreso: Math.round(ultimo.ingreso*100)/100,
+    gastos: Math.round(ultimo.gastos*100)/100,
+    isr: Math.round(ultimo.isr*100)/100,
+    queda: Math.round(ultimo.queda*100)/100
+  };
+  const i = registro.findIndex(r => r.mes === mes);
+  const actualizado = i >= 0;
+  if(actualizado) registro[i] = entrada; else registro.push(entrada);
+  registro.sort((a,b) => a.mes < b.mes ? 1 : -1);
+  const ok = persistirRegistro();
+  renderRegistro();
+  toast((actualizado ? 'Mes actualizado: ' : 'Mes guardado: ') + mesTexto(mes) + (ok ? '' : ' (solo mientras no cierres la página)'));
+}
+function borrarMes(mes){
+  registro = registro.filter(r => r.mes !== mes);
+  persistirRegistro();
+  renderRegistro();
+}
+function renderRegistro(){
+  const lista = document.getElementById('regList');
+  const stats = document.getElementById('regStats');
+  const chart = document.getElementById('regChart');
+  const cap = document.getElementById('regCap');
+
+  if(registro.length === 0){
+    cap.textContent = 'Aún no has guardado ningún mes';
+    stats.innerHTML = '';
+    chart.innerHTML = '<div class="empty">Todavía no hay datos para graficar.</div>';
+    lista.innerHTML = '<div class="empty">Tu historial está vacío.<br>Ve a <b>📝 Mis datos</b>, captura tus ingresos y gastos, y toca <b>"Guardar este mes"</b>.</div>';
+    return;
+  }
+
+  const n = registro.length;
+  const totIng = registro.reduce((s,r)=>s+r.ingreso,0);
+  const totGas = registro.reduce((s,r)=>s+r.gastos,0);
+  const totIsr = registro.reduce((s,r)=>s+r.isr,0);
+  const totQue = registro.reduce((s,r)=>s+r.queda,0);
+  cap.textContent = n + (n===1 ? ' mes registrado' : ' meses registrados');
+  stats.innerHTML =
+    '<div class="stat"><div class="k">Ingresos totales</div><div class="v gold">'+fmtShort(totIng)+'</div></div>'+
+    '<div class="stat"><div class="k">Gastos totales</div><div class="v warn">'+fmtShort(totGas)+'</div></div>'+
+    '<div class="stat"><div class="k">ISR total</div><div class="v">'+fmtShort(totIsr)+'</div></div>'+
+    '<div class="stat"><div class="k">Promedio que te queda</div><div class="v" style="color:var(--good)">'+fmtShort(totQue/n)+'</div></div>';
+
+  // Gráfica: últimos 6 meses, en orden cronológico
+  const ult = registro.slice(0,6).reverse();
+  const max = Math.max(1, ...ult.map(r => Math.max(r.ingreso, r.gastos)));
+  chart.innerHTML = ult.map(r =>
+    '<div class="bcol"><div class="bars">'+
+      '<div class="b inc" style="height:'+Math.max(2, r.ingreso/max*100)+'%" title="Ingreso '+fmtShort(r.ingreso)+'"></div>'+
+      '<div class="b exp" style="height:'+Math.max(2, r.gastos/max*100)+'%" title="Gastos '+fmtShort(r.gastos)+'"></div>'+
+    '</div><div class="blbl">'+mesCorto(r.mes)+'</div></div>'
+  ).join('');
+
+  lista.innerHTML = registro.map(r =>
+    '<div class="reg-item"><div class="reg-top"><div class="reg-mes">'+mesTexto(r.mes)+'</div>'+
+    '<button class="reg-del" onclick="borrarMes(\''+r.mes+'\')">Borrar</button></div>'+
+    '<div class="reg-nums">'+
+      '<div><div class="k">Ingreso</div><div class="v" style="color:var(--gold2)">'+fmtShort(r.ingreso)+'</div></div>'+
+      '<div><div class="k">Gastos</div><div class="v" style="color:var(--warn)">'+fmtShort(r.gastos)+'</div></div>'+
+      '<div><div class="k">ISR</div><div class="v">'+fmtShort(r.isr)+'</div></div>'+
+      '<div><div class="k">Te quedó</div><div class="v" style="color:'+(r.queda<0?'var(--bad)':'var(--good)')+'">'+fmtShort(r.queda)+'</div></div>'+
+    '</div></div>'
+  ).join('');
 }
 function selChip(el){
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
@@ -401,6 +582,7 @@ function calcular(){
   const isrMensual = isrAnual/12;
   const tasaEfectiva = salarioAnual > 0 ? (isrAnual/salarioAnual*100) : 0;
   const teQueda = salarioMensual - isrMensual - dedMensual - genMensual;
+  ultimo = {ingreso: salarioMensual, gastos: dedMensual + genMensual, isr: isrMensual, queda: teQueda};
 
   document.getElementById('rIngreso').textContent = fmt(salarioMensual);
   document.getElementById('rIsr').textContent = fmt(isrMensual);
@@ -496,10 +678,15 @@ function calcular(){
   document.getElementById('invList').innerHTML = ideas.join('');
 }
 
-calcular();
+(function init(){
+  const hoy = new Date();
+  document.getElementById('mesReg').value = hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0');
+  cargarRegistro();
+  calcular();
+  renderRegistro();
+})();
 </script>
 </body>
 </html>
+
 <!-- actualización -->
-
-
